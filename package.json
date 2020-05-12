@@ -1,0 +1,27 @@
+{
+  "name": "nodebasev2",
+  "version": "1.0.0",
+  "description": "This is the base node server , but with cicd with circle ci",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kunal-rp/nodeBaseWCCi.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kunal-rp/nodeBaseWCCi/issues"
+  },
+  "homepage": "https://github.com/kunal-rp/nodeBaseWCCi#readme",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mocha": "^7.1.2"
+  }
+}
