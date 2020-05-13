@@ -2,16 +2,44 @@ var express = require('express');
 const bodyParser = require('body-parser');
 var cors = require('cors')
 
-var actions = require('./src/actions')
+var batonHandler = require('./prod2/baton')
+var actions = require('./prod2/actions')
+var paramValidator = require('./prod2/param_validator')
+var auth = require('./prod2/auth')
 
+/*
 
-// setup the server w/ cors  
+Usual Setup:
+
+Action: main logic
+	handles param validation
+Auth: user authentication 
+Automated Tasks: reoccuring calls 
+
+var production_action = );
+var auth = require('./prod2/auth.js')
+var automated_tasks = require('./prod2/automated_tasks')
+*/
+
 var app = express();
 app.options('*', cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 	extended: false
 }));
+
+
+//all of the endpoints for the server
+// GET by default, specify for POST
+var endpoints = [
+{
+	url: 'testPostCall',
+	action: 'post_testPostCall',
+	post: true
+}, {
+	url: 'testGetCall',
+	action: 'get_testGetCall'
+}];
 
 app.all('*', function(req, res, next) {
 	var origin = req.get('origin');
@@ -22,29 +50,51 @@ app.all('*', function(req, res, next) {
 });
 
 
-//all of the endpoints for the server
-var endpoints = [
-{
-	url: 'testGetCall',
-	action: 'get_testGetCall'
-}];
-
-
 
 endpoints.forEach(function(endpoint) {
 	var endpointFunction = function(req, res) {
-		/*
-		TODO:
-			1.Create baton
-			2.Validate params
-			3.pass only params and response to action
-		*/ 
-		actions[endpoint.action](req, res)
-
+		//gets api params based on call type
+		var params = (endpoint.post ? req.body : req.query)
+		//create baton for request
+		var baton = batonHandler.createBaton(actions._generateId(10), endpoint.url, params, res)
+		if (endpoint.post) baton.requestType = 'POST'
+		//validate user for call
+		auth.authValidate(baton, req, function() {
+			//validate request params
+			paramValidator.validateRequest(baton, params, endpoint.url, function(updated_params) {
+				//continue call and call main logic
+				if (updated_params) actions[endpoint.action](baton, updated_params, res);
+			})
+		})
 	}
 	if (endpoint.post) {
 		app.post('/' + endpoint.url, endpointFunction);
 		return
+	}
+	app.get('/' + endpoint.url, endpointFunction);
+})
+
+//user specific endpoints
+//seperate b/c doesn't require actions call, rather only auth calls
+var user_endpoints = [{
+	url: 'createUser',
+	action: 'createUser'
+}, {
+	url: 'login',
+	action: 'login'
+}, {
+	url: 'permission',
+	action: 'permission'
+}, {
+	url: 'validate',
+	action: 'get_authValidate'
+}]
+
+user_endpoints.forEach(function(endpoint) {
+
+	var endpointFunction = function(req, res) {
+		var baton = batonHandler.createBaton(actions._generateId(10), endpoint.url, null, res)
+		auth[endpoint.action](baton, req)
 	}
 	app.get('/' + endpoint.url, endpointFunction);
 })
