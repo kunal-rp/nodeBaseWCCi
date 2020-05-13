@@ -14,7 +14,6 @@
       - image: circleci/openjdk:8-jdk-stretch # ...with this image as the primary container; this is where all `steps` will run
     steps:
       - checkout
-      - heroku/install
       - heroku/deploy-via-git
  workflows:
    version: 2
