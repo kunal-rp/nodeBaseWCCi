@@ -10,6 +10,7 @@
       - run: npm install
       - run: npm test
  workflows:
+  version: 2
   heroku_deploy:
     jobs:
       - test
